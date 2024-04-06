@@ -6,17 +6,26 @@ for filterType = 1:3
     % for metricToPlot = 1:3
 
     %% User tunable variables
-    patientId = 8;
+    patientId = 13;
     analysisType = 'clean'; % Either clean or unclean. Unclean will include data with dropouts
     windowSizeSeconds = 10; % In seconds
     overlapSeconds = 9; % Overlap between windows
     % filterType = 1; % 1-No filter, 2-LPF, 3-HPF
     metricToPlot = 3; % 1-V, 2-M, 3-S
-    totalNumberOfSubplots = 5; % Number of plots on each file
+    totalNumberOfSubplots = 1; % Number of plots on each file
     tickDecimateFactor = 4; % Number of ticks to be removed per plot
-    obtainExtremeValues = false; % Gather which are all the min & max values of a metric, then perform an average
+    orderType = 1; % 1-ascending, 2-descending
+    lowContrast = false;
+    obtainExtremeValues = true; % Gather which are all the min & max values of a metric, then perform an average
     savePlots = true; % Save metric plots into png and mat files
     saveVideo = true; % Saves video
+
+    if(obtainExtremeValues)
+        savePlots = false;
+        saveVideo = false;
+    end
+
+    %% Directory parameters definition
 
     switch metricToPlot
         case 1
@@ -26,7 +35,7 @@ for filterType = 1:3
         case 3
             metricString = 'S';
         otherwise
-            error('Invalid metricToPlot: %d. filterType must be 1, 2, or 3.', metricToPlot);
+            error('Invalid metricToPlot: %d. metricToPlot must be 1, 2, or 3.', metricToPlot);
     end
 
     switch filterType
@@ -40,13 +49,11 @@ for filterType = 1:3
             error('Invalid filterType: %d. filterType must be 1, 2, or 3.', filterType);
     end
 
-    %% Directory parameters definition
-
     baseDirectory = "P:\WORK\David\UPF\TFM";
     dataDirectory = fullfile(baseDirectory, "Data", "Seizure_Data_" + patientId);
     visualizerDirectory = fullfile(baseDirectory, "EEG_visualizer");
     metricsAndMeasuresDirectory = fullfile(visualizerDirectory, "Metrics_and_measures");
-    additionalScriptsDirectory = fullfile(baseDirectory, "Additional_scripts");
+    additionalScriptsDirectory = fullfile(baseDirectory, "TFM_code");
     metricsPlotsDirectory = fullfile(additionalScriptsDirectory, "Metrics_plots");
 
     % Define where the plots will be saved
@@ -54,12 +61,24 @@ for filterType = 1:3
     switch(analysisType)
         case('clean')
             patientMetricPlotsDirectory = fullfile(metricsPlotsDirectory, ['Clean_metric_plots_for_patient_', num2str(patientId)]);
+            patientPlotsFolderName = ['Clean_metric_plots_for_patient_', num2str(patientId)];
         case('unclean')
             patientMetricPlotsDirectory = fullfile(metricsPlotsDirectory, ['Unclean_metric_plots_for_patient_', num2str(patientId)]);
+            patientPlotsFolderName = ['Unclean_metric_plots_for_patient_', num2str(patientId)];
         otherwise
             error('Invalid analysis type. The analysisType must be either ''clean'' or ''unclean''.');
     end
 
+    switch(orderType)
+        case(1)
+            patientPlotsFolderName = [patientPlotsFolderName, '_asc'];
+        case(2)
+            patientPlotsFolderName = [patientPlotsFolderName, '_desc'];
+        otherwise
+            error('Invalid orderType: %d. orderType must be 1 or 2.', orderType);
+    end
+    
+    patientPlotsFolderName = [patientPlotsFolderName, '_sp', num2str(totalNumberOfSubplots)];
     savePlotsDirectory = fullfile(patientMetricPlotsDirectory, [filterDescription, '_data']);
     selectedMetricDirectory = fullfile(savePlotsDirectory, metricString);
 
@@ -68,13 +87,10 @@ for filterType = 1:3
     cd(additionalScriptsDirectory)
 
     metricsPlotsFolderName = 'Metrics_plots';
-    cleanedMetricPlotsFolderName = ['Clean_metric_plots_for_patient_', num2str(patientId)];
-    uncleanedMetricPlotsFolderName = ['Unclean_metric_plots_for_patient_', num2str(patientId)];
     filterFolderName = [filterDescription, '_data'];
 
     DV_CheckAndCreateFolder(metricsPlotsFolderName)
-    DV_CheckAndCreateFolder(cleanedMetricPlotsFolderName, metricsPlotsDirectory, additionalScriptsDirectory)
-    DV_CheckAndCreateFolder(uncleanedMetricPlotsFolderName, metricsPlotsDirectory, additionalScriptsDirectory)
+    DV_CheckAndCreateFolder(patientPlotsFolderName, metricsPlotsDirectory, additionalScriptsDirectory);
     DV_CheckAndCreateFolder(filterFolderName, patientMetricPlotsDirectory, additionalScriptsDirectory)
     DV_CheckAndCreateFolder(metricString, savePlotsDirectory, additionalScriptsDirectory)
 
@@ -99,7 +115,15 @@ for filterType = 1:3
 
     % Sort by descending time and remove dropout affected recordings if
     % necessary
-    timeSortedArtifactData = sortrows(artifactData, 2, 'descend');
+    switch(orderType)
+        case(1)
+            timeSortedArtifactData = sortrows(artifactData, 2, 'ascend');
+        case(2)
+            timeSortedArtifactData = sortrows(artifactData, 2, 'descend');
+        otherwise
+            error('Invalid orderType: %d. orderType must be 1 or 2.', orderType);
+    end
+
     if strcmp(analysisType, 'clean')
         timeSortedArtifactData = timeSortedArtifactData(timeSortedArtifactData(:, 3) <= 0, :);
     end
@@ -139,23 +163,75 @@ for filterType = 1:3
             patientsClims{patient, filter} = -1;
         end
     end
+
+    % Patient 1
+    patientsClims{1, 1} = {[0.8 3.86] [0.05 0.66] [0.13 0.71]};
+    patientsClims{1, 2} = {[0.49 1.35] [0.12 0.32] [0.1 0.25]};
+    patientsClims{1, 3} = {[0.23 0.38] [1.46 1.67] [0.36 0.59]};
     
     % Patient 2
     patientsClims{2, 1} = {[1.09 4.27] [0.04 0.35] [0.09 0.55]};
     patientsClims{2, 2} = {[0.61 1.38] [0.11 0.27] [0.1 0.24]};
     patientsClims{2, 3} = {[0.26 0.37] [1.52 1.68] [0.42 0.58]};
 
+    % Patient 3
+    patientsClims{3, 1} = {[0.83 4.77] [0.06 0.95] [0.13 0.91]};
+    patientsClims{3, 2} = {[0.56 1.4] [0.1 0.29] [0.09 0.25]};
+    patientsClims{3, 3} = {[0.24 0.38] [1.42 1.74] [0.37 0.61]};
+
+    % Patient 4
+    patientsClims{4, 1} = {[0.89 3.89] [0.03 0.47] [0.07 0.83]};
+    patientsClims{4, 2} = {[0.63 1.4] [0.1 0.26] [0.08 0.24]};
+    patientsClims{4, 3} = {[0.26 0.36] [1.54 1.7] [0.43 0.59]};
+
+    % Patient 5 (NO DATA)
+
+    % Patient 6 (NO DATA)
+
+    % Patient 7
+    patientsClims{7, 1} = {[0.83 3.67] [0.04 0.61] [0.09 0.63]};
+    patientsClims{7, 2} = {[0.55 1.35] [0.1 0.32] [0.07 0.24]};
+    patientsClims{7, 3} = {[0.26 0.38] [1.49 1.68] [0.43 0.6]};
+
     % Patient 8
     patientsClims{8, 1} = {[0.79 3.5] [0.06 0.4] [0.13 0.51]};
     patientsClims{8, 2} = {[0.46 1.4] [0.11 0.37] [0.09 0.26]};
     patientsClims{8, 3} = {[0.26 0.38] [1.5 1.66] [0.43 0.59]};
+
+    % Patient 9
+    patientsClims{9, 1} = {[0.94 3.12] [0.05 0.56] [0.11 0.72]};
+    patientsClims{9, 2} = {[0.55 1.39] [0.11 0.29] [0.09 0.25]};
+    patientsClims{9, 3} = {[0.21 0.37] [1.48 1.66] [0.32 0.59]};
+
+    % Patient 10
+    patientsClims{10, 1} = {[0.93 3.41] [0.05 0.36] [0.09 0.51]};
+    patientsClims{10, 2} = {[0.58 1.39] [0.1 0.3] [0.08 0.25]};
+    patientsClims{10, 3} = {[0.27 0.38] [1.5 1.67] [0.43 0.6]};
 
     % Patient 11
     patientsClims{11, 1} = {[0.86 4.44] [0.04 0.35] [0.12 0.56]};
     patientsClims{11, 2} = {[0.55 1.34] [0.12 0.3] [0.09 0.24]};
     patientsClims{11, 3} = {[0.26 0.37] [1.44 1.66] [0.41 0.58]};
 
-    metricsClims = patientsClims{patientId, filterType};
+    % Patient 12 (NO DATA)
+
+    % Patient 13
+    patientsClims{13, 1} = {[0.94 4.2] [0.04 0.71] [0.08 0.84]};
+    patientsClims{13, 2} = {[0.44 1.42] [0.1 0.31] [0.09 0.25]};
+    patientsClims{13, 3} = {[0.21 0.39] [1.44 1.68] [0.32 0.59]};
+
+    % Patient 14 (NO DATA)
+
+    % Patient 15
+    patientsClims{15, 1} = {[0.8 4.88] [0.03 0.39] [0.08 0.66]};
+    patientsClims{15, 2} = {[0.62 1.47] [0.1 0.26] [0.07 0.26]};
+    patientsClims{15, 3} = {[0.26 0.38] [1.5 1.69] [0.43 0.6]};
+
+    if(lowContrast)
+        metricsClims = patientsClims{patientId, 1};
+    else
+        metricsClims = patientsClims{patientId, filterType};
+    end
 
     %% METRIC PLOTS
 
@@ -168,10 +244,8 @@ for filterType = 1:3
         totalWindowsList = zeros(1,totalNumberOfSubplots);
         seizureList = zeros(1,totalNumberOfSubplots);
         batchNumber = 0;
-        % testLength = 7;
 
         for index = 1:length(timeSortedRecordingIds)
-            % for index = 1:testLength
 
             %% Definition of basic EEG and processing variables
             cd(dataDirectory)
@@ -180,7 +254,7 @@ for filterType = 1:3
             try
                 eegData = load(sprintf('Seizure_%03d.mat', seizure));
             catch
-                warning(['File ', seizure, ' does not exist. Skipping to the next iteration.']);
+                warning(['File ', num2str(seizure), ' does not exist. Skipping to the next iteration.']);
                 continue;  % Skips to the next iteration of the loop
             end
 
@@ -286,7 +360,7 @@ for filterType = 1:3
         % Create a video object
 
         outputVideo = VideoWriter(videoFileName, 'Motion JPEG AVI');
-        outputVideo.FrameRate = 1/2;
+        outputVideo.FrameRate = 1;
         open(outputVideo);
 
         for i = 1:numel(pngFiles)

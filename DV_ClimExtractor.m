@@ -48,7 +48,14 @@ for index = 1:totalRecordingsToAnalyze
     %% Definition of basic EEG and processing variables
     cd(dataDirectory)
     seizure = timeSortedRecordingIds(index);
-    eegData = load(sprintf('Seizure_%03d.mat', seizure));
+    
+    try
+        eegData = load(sprintf('Seizure_%03d.mat', seizure));
+    catch
+        warning(['File ', num2str(seizure), ' does not exist. Skipping to the next iteration.']);
+        continue;  % Skips to the next iteration of the loop
+    end
+
     eegFull = eegData.data';
     fs= 400;
     [totalChannels, channelLength] = size(eegFull);

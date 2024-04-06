@@ -75,6 +75,7 @@ for currentSubplot = 1:totalNumberOfSubplots
     nameChannel = flip(nameChannel);
     channelsMetricList = cellfun(@(x) flip(x), channelsMetricList, 'UniformOutput', false);
     analyzedMetric = channelsMetricList{metricToPlot, currentSubplot};
+    % analyzedMetric = flipud(channelsMetricList{metricToPlot, currentSubplot});
 
     stepSize = windowSizeSeconds - overlapSeconds; % From window start to window start
     windowStarts = (0:totalWindows-1) * stepSize;
