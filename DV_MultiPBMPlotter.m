@@ -13,7 +13,8 @@ function DV_MultiPBMPlotter( ...
     filterType, ...
     totalNumberOfSubplots, ...
     tickDecimateFactor, ...
-    savePlotsDirectory)
+    savePlotsDirectory, ...
+    doNotCloseFigure)
 
 %% Gca parameters and set general title of subplots
 
@@ -228,6 +229,8 @@ saveas(figHandle, fullImageFileName);
 
 cd(originDirectory);
 
-close all
+if(~doNotCloseFigure)
+    close all
+end
 
 end

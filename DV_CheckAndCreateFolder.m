@@ -30,7 +30,7 @@ function DV_CheckAndCreateFolder(folderName, directoryToGo, mainFolder)
         disp(['Folder "', folderName, '" created successfully.']);
     end
     
-    % Change to the main folder if provided
+    % Change to the main folder if provided (to read this function again)
     if nargin >= 3 && exist(mainFolder, 'dir')
         cd(mainFolder);
     end
