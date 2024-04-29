@@ -1,34 +1,19 @@
-clear;
-clc;
-close all;
-
-% for patientId = 1:15
-%     if any(patientId == [5, 6, 12, 14])
-%         continue
-%     end
-%     for filterType = 1:3
-%         for metricToPlot = 1:3
-
-%% User tunable variables
-patientId = 11;
-analysisType = 'clean'; % Either clean or unclean. Unclean will include data with dropouts
-windowSizeSeconds = 10; % In seconds
-overlapSeconds = 9; % Overlap between windows
-filterType = 1; % 1-No filter, 2-LPF, 3-HPF
-metricToPlot = 3; % 1-V, 2-M, 3-S
-totalNumberOfSubplots = 1; % Number of plots on each file
-tickDecimateFactor = 4; % Number of ticks to be removed per plot
-orderType = 1; % 1-ascending, 2-descending
-lowContrast = false;
-obtainExtremeValues = false; % Gather which are all the min & max values of a metric, then perform an average
-savePlots = false; % Save metric plots into png and mat files
-saveVideo = false; % Saves video
-doNotCloseFigure = false;
-
-if(obtainExtremeValues)
-    savePlots = false;
-    saveVideo = false;
-end
+function DV_PatientMetricPlotter( ...
+    patientId, ...
+    analysisType, ...
+    windowSizeSeconds, ...
+    overlapSeconds, ...
+    filterType, ...
+    metricToPlot, ...
+    totalNumberOfSubplots, ...
+    tickDecimateFactor, ...
+    orderType, ...
+    lowContrast, ...
+    obtainExtremeValues, ...
+    savePlots, ...
+    saveVideo, ...
+    doNotCloseFigure, ...
+    storeInHardDrive)
 
 %% Directory parameters definition
 
@@ -73,15 +58,24 @@ switch(orderType)
 end
 
 baseDirectory = "P:\WORK\David\UPF\TFM";
+hardDriveDirectory = "E:\";
 dataDirectory = fullfile(baseDirectory, "Data", "Seizure_Data_" + patientId);
 visualizerDirectory = fullfile(baseDirectory, "EEG_visualizer");
 metricsAndMeasuresDirectory = fullfile(visualizerDirectory, "Metrics_and_measures");
 additionalScriptsDirectory = fullfile(baseDirectory, "TFM_code");
-metricsPlotsDirectory = fullfile(additionalScriptsDirectory, "Metrics_plots");
+
+if(storeInHardDrive)
+    metricsPlotsDirectory = fullfile(hardDriveDirectory, "Metrics_plots");
+else
+    metricsPlotsDirectory = fullfile(additionalScriptsDirectory, "Metrics_plots");
+end
+
 patientPlotsFolderName = [patientPlotsFolderName, '_sp', num2str(totalNumberOfSubplots)];
+rawMetricFolderName = 'Raw_metrics';
 patientMetricPlotsDirectory = fullfile(metricsPlotsDirectory, patientPlotsFolderName);
 savePlotsDirectory = fullfile(patientMetricPlotsDirectory, [filterDescription, '_data']);
 selectedMetricDirectory = fullfile(savePlotsDirectory, metricString);
+rawMetricDirectory = fullfile(savePlotsDirectory, rawMetricFolderName);
 
 %% Folder creation
 
@@ -90,10 +84,11 @@ cd(additionalScriptsDirectory)
 metricsPlotsFolderName = 'Metrics_plots';
 filterFolderName = [filterDescription, '_data'];
 
-DV_CheckAndCreateFolder(metricsPlotsFolderName)
+DV_CheckAndCreateFolder(metricsPlotsFolderName, hardDriveDirectory, additionalScriptsDirectory);
 DV_CheckAndCreateFolder(patientPlotsFolderName, metricsPlotsDirectory, additionalScriptsDirectory);
 DV_CheckAndCreateFolder(filterFolderName, patientMetricPlotsDirectory, additionalScriptsDirectory)
 DV_CheckAndCreateFolder(metricString, savePlotsDirectory, additionalScriptsDirectory)
+DV_CheckAndCreateFolder(rawMetricFolderName, savePlotsDirectory, additionalScriptsDirectory)
 
 %% Retrieve diagnostics data and sort it
 
@@ -253,9 +248,11 @@ if(savePlots)
         %% Definition of basic EEG and processing variables
         cd(dataDirectory)
         seizure = timeSortedRecordingIds(index);
+        seizureFilename = sprintf('Seizure_%03d.mat', seizure);
+        metricFilename = sprintf('Metrics_%03d.mat', seizure);
 
         try
-            eegData = load(sprintf('Seizure_%03d.mat', seizure));
+            eegData = load(seizureFilename);
         catch
             warning(['File ', num2str(seizure), ' does not exist. Skipping to the next iteration.']);
             continue;  % Skips to the next iteration of the loop
@@ -279,30 +276,44 @@ if(savePlots)
             filteredChannel = DV_BandPassFilter(channelData, fs, filterType);
             filteredEegFullCentered(i, :) = filteredChannel;
         end
+        metricMatFilePath = fullfile(rawMetricDirectory, metricFilename);
 
         % Obtain number of total windows after windowing
         windowSizeSamples = windowSizeSeconds * fs;
         overlapSamples = fs * overlapSeconds;
         totalWindows = floor((length(eegFull(1, :)) - windowSizeSamples) / (windowSizeSamples - overlapSamples)) + 1;
 
-        %% Perform HT of signal and obtain windowed metrics
-
-        cd(metricsAndMeasuresDirectory);
         loadPercentage = (index / length(timeSortedRecordingIds)) * 100;
         disp(['(', metricString, ' - ' , filterDescription, ') Analysis of recording ', num2str(timeSortedRecordingIds(index)), ': ', num2str(index), ...
             ' out of ', num2str(length(timeSortedRecordingIds)), ' (', num2str(loadPercentage), '%)']);
 
-        channelsV = zeros(totalChannels, totalWindows);
-        channelsM = zeros(totalChannels, totalWindows);
-        channelsS = zeros(totalChannels, totalWindows);
+        %% Perform HT of signal and obtain windowed metrics
+        if ~exist(metricMatFilePath, 'file')
 
-        for i=1:totalChannels
-            hilbertTransform = hilbert(filteredEegFullCentered(i, :));
-            metrics = DV_EEGPhaseVelocityAnalyzer(fs, hilbertTransform(1, :), windowSizeSeconds, overlapSeconds);
+            cd(metricsAndMeasuresDirectory);
 
-            channelsV(i, :) = metrics(1, :);
-            channelsM(i, :) = metrics(2, :);
-            channelsS(i, :) = metrics(3, :);
+            channelsV = zeros(totalChannels, totalWindows);
+            channelsM = zeros(totalChannels, totalWindows);
+            channelsS = zeros(totalChannels, totalWindows);
+
+            for i=1:totalChannels
+                hilbertTransform = hilbert(filteredEegFullCentered(i, :));
+                metrics = DV_EEGPhaseVelocityAnalyzer(fs, hilbertTransform(1, :), windowSizeSeconds, overlapSeconds);
+
+                channelsV(i, :) = metrics(1, :);
+                channelsM(i, :) = metrics(2, :);
+                channelsS(i, :) = metrics(3, :);
+            end
+
+            recordingMetrics = cell(3, 1);
+            recordingMetrics{1} = channelsV;
+            recordingMetrics{2} = channelsM;
+            recordingMetrics{3} = channelsS;
+
+            save(fullfile(rawMetricDirectory, metricFilename), 'recordingMetrics');
+        else
+            recordingMetrics = load(metricMatFilePath);
+            recordingMetrics = recordingMetrics.recordingMetrics;
         end
 
         %% Obtain subplots
@@ -312,9 +323,9 @@ if(savePlots)
         eegList{subplotCounter} = filteredEegFullCentered;
         seizureList(subplotCounter) = seizure;
         totalWindowsList(subplotCounter) = totalWindows;
-        channelsMetricList{1, subplotCounter} = channelsV;
-        channelsMetricList{2, subplotCounter} = channelsM;
-        channelsMetricList{3, subplotCounter} = channelsS;
+        channelsMetricList{1, subplotCounter} = recordingMetrics{1};
+        channelsMetricList{2, subplotCounter} = recordingMetrics{2};
+        channelsMetricList{3, subplotCounter} = recordingMetrics{3};
 
         if subplotCounter == totalNumberOfSubplots || index == length(timeSortedRecordingIds)
             % if subplotCounter == totalNumberOfSubplots || index == testLength
@@ -380,3 +391,4 @@ cd(additionalScriptsDirectory)
 
 %     end
 % end
+end

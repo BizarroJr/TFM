@@ -18,7 +18,7 @@ function DV_MultiPBMPlotter( ...
 
 %% Gca parameters and set general title of subplots
 
-figure;
+figHandle = figure('Visible', 'off');
 
 interpreter = 'latex';
 titlesFontSize = 16;
@@ -203,7 +203,7 @@ end
 originDirectory = pwd;
 cd(savePlotsDirectory);
 
-figHandle = gcf;
+% figHandle = gcf;
 batchNumberStr = sprintf('%03d', batchNumber);
 fileTitle = [metricString, '_', filterDescription, '_patient', num2str(patientId), '_batch', batchNumberStr];
 figExtension = '.mat';
@@ -223,9 +223,11 @@ set(figHandle, 'PaperPosition', [0, 0, desiredWidthInches, desiredHeightInches])
 
 % Save the figure as an image
 saveas(figHandle, fullImageFileName);
+print(fullImageFileName, '-dpng', '-r300'); % 300 DPI resolution
 
-% % Save the figure as an mat
-% save(fullFigFileName, 'figHandle');
+% Save the figure as a mat
+figHandle = gcf;
+save(fullFigFileName, 'figHandle');
 
 cd(originDirectory);
 
