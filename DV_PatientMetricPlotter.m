@@ -126,7 +126,8 @@ totalRecordingsToAnalyze = length(timeSortedArtifactData);
 timeSortedRecordingIds = timeSortedArtifactData(:, 1);
 averageRecordingDuration = mean(timeSortedArtifactData(:, 2));
 
-disp(['Patient: ', num2str(patientId) , ' - Average recording duration: ', num2str(averageRecordingDuration)]);
+% disp(['Patient: ', num2str(patientId), ' (', filterDescription, ' - ', metricString, ') - Average recording duration: ', num2str(averageRecordingDuration)]);
+disp(['Patient: ', num2str(patientId), ' (', filterDescription, ' - ', metricString, ')']);
 
 %% Obtain Clims
 % To be able to compare between recordings of a patient, color limits of
