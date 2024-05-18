@@ -367,7 +367,7 @@ if(savePlots)
 end
 %% Metric averaging
 
-if(averageMetrics)
+if(averageMetrics == 1)
 
     preIctalPeriodAverages = {[], [], []};
     ictalPeriodAverages = {[], [], []};
@@ -419,19 +419,33 @@ if(averageMetrics)
     end
 
     % Grand averages obtention
-    
-    grandAveragePreIctalV = mean(preIctalPeriodAverages{1}, 2);
-    grandAveragePreIctalM = mean(preIctalPeriodAverages{2}, 2);
-    grandAveragePreIctalS = mean(preIctalPeriodAverages{3}, 2);
 
-    grandAverageIctalV = mean(ictalPeriodAverages{1}, 2);
-    grandAverageIctalM = mean(ictalPeriodAverages{2}, 2);
-    grandAverageIctalS = mean(ictalPeriodAverages{3}, 2);
+    grandAveragesV = zeros(16, 3);
+    grandAveragesM = zeros(16, 3);
+    grandAveragesS = zeros(16, 3);
 
-    grandAveragePostIctalV = mean(postIctalPeriodAverages{1}, 2);
-    grandAveragePostIctalM = mean(postIctalPeriodAverages{2}, 2);
-    grandAveragePostIctalS = mean(postIctalPeriodAverages{3}, 2);
+    % Calculate grand averages for each period and metric
+    grandAveragesV(:, 1) = mean(preIctalPeriodAverages{1}, 2);
+    grandAveragesV(:, 2) = mean(ictalPeriodAverages{1}, 2);
+    grandAveragesV(:, 3) = mean(postIctalPeriodAverages{1}, 2);
 
+    grandAveragesM(:, 1) = mean(preIctalPeriodAverages{2}, 2);
+    grandAveragesM(:, 2) = mean(ictalPeriodAverages{2}, 2);
+    grandAveragesM(:, 3) = mean(postIctalPeriodAverages{2}, 2);
+
+    grandAveragesS(:, 1) = mean(preIctalPeriodAverages{3}, 2);
+    grandAveragesS(:, 2) = mean(ictalPeriodAverages{3}, 2);
+    grandAveragesS(:, 3) = mean(postIctalPeriodAverages{3}, 2);
+
+    DV_MetricAveragePlotter( ...
+        eegFull, ...
+        grandAveragesV, ...
+        grandAveragesM, ...
+        grandAveragesS, ...
+        patientId, ...
+        filterDescription, ...
+        patientMetricPlotsDirectory, ...
+        doNotCloseFigure)
 
 end
 
@@ -462,6 +476,4 @@ end
 
 cd(additionalScriptsDirectory)
 
-%     end
-% end
 end

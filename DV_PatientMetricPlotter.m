@@ -25,7 +25,7 @@ titlesFontSize = 16;
 axisFontWeight = 'bold';
 
 set(groot,'defaultAxesTickLabelInterpreter',interpreter);
-set(groot,'defaulttextinterpreter',interpreter);
+set(groot,'defaultTextInterpreter',interpreter); 
 set(groot,'defaultLegendInterpreter',interpreter);
 
 switch filterType
