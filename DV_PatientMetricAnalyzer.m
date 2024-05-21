@@ -35,7 +35,7 @@ switch filterType
     case 2
         filterDescription = 'LPF';
     case 3
-        filterDescription = 'HPF';
+        filterDescription = 'HPF2';
     otherwise
         error('Invalid filterType: %d. filterType must be 1, 2, or 3.', filterType);
 end
@@ -73,25 +73,31 @@ end
 
 patientPlotsFolderName = [patientPlotsFolderName, '_sp', num2str(totalNumberOfSubplots)];
 rawMetricFolderName = 'Raw_metrics';
+metricsPlotsFolderName = 'Metrics_plots';
+filterFolderName = [filterDescription, '_data'];
+videosFolderName = 'Videos';
+averagedMetricsFolderName = 'Averaged_metrics';
+
 patientMetricPlotsDirectory = fullfile(metricsPlotsDirectory, patientPlotsFolderName);
-savePlotsDirectory = fullfile(patientMetricPlotsDirectory, [filterDescription, '_data']);
+savePlotsDirectory = fullfile(patientMetricPlotsDirectory, filterFolderName);
 selectedMetricDirectory = fullfile(savePlotsDirectory, metricString);
 rawMetricDirectory = fullfile(savePlotsDirectory, rawMetricFolderName);
+videosDirectory = fullfile(patientMetricPlotsDirectory, videosFolderName);
+averagedMetricsDirectory = fullfile(patientMetricPlotsDirectory, averagedMetricsFolderName);
 
 %% Folder creation
 
 cd(additionalScriptsDirectory)
 
-metricsPlotsFolderName = 'Metrics_plots';
-filterFolderName = [filterDescription, '_data'];
-
 DV_CheckAndCreateFolder(metricsPlotsFolderName, hardDriveDirectory, additionalScriptsDirectory);
 DV_CheckAndCreateFolder(patientPlotsFolderName, metricsPlotsDirectory, additionalScriptsDirectory);
-DV_CheckAndCreateFolder(filterFolderName, patientMetricPlotsDirectory, additionalScriptsDirectory)
-DV_CheckAndCreateFolder(metricString, savePlotsDirectory, additionalScriptsDirectory)
-DV_CheckAndCreateFolder(rawMetricFolderName, savePlotsDirectory, additionalScriptsDirectory)
+DV_CheckAndCreateFolder(videosFolderName, patientMetricPlotsDirectory, additionalScriptsDirectory);
+DV_CheckAndCreateFolder(averagedMetricsFolderName, patientMetricPlotsDirectory, additionalScriptsDirectory);
+DV_CheckAndCreateFolder(filterFolderName, patientMetricPlotsDirectory, additionalScriptsDirectory);
+DV_CheckAndCreateFolder(metricString, savePlotsDirectory, additionalScriptsDirectory);
+DV_CheckAndCreateFolder(rawMetricFolderName, savePlotsDirectory, additionalScriptsDirectory);
 
-%% Retrieve diagnostics data and sort it
+%% Retrieve artifact diagnostics data and sort it
 
 cd(dataDirectory);
 fileToFindRegex = ['Artifact_diagnostics_of_patient_', num2str(patientId), '.xlsx'];
@@ -107,11 +113,13 @@ for i = 1:length(files)
 end
 
 % Provide artifact data the seizure identifier
+
 numRows = size(artifactData, 1);
 artifactData = [transpose(1:numRows), artifactData];
 
-% Sort by descending time and remove dropout affected recordings if
+% Sort by descending time and remove dropout & flatline affected recordings if
 % necessary
+
 switch(orderType)
     case(1)
         timeSortedArtifactData = sortrows(artifactData, 2, 'ascend');
@@ -120,9 +128,12 @@ switch(orderType)
     otherwise
         error('Invalid orderType: %d. orderType must be 1 or 2.', orderType);
 end
+
 if strcmp(analysisType, 'clean')
     timeSortedArtifactData = timeSortedArtifactData(timeSortedArtifactData(:, 3) <= 0, :);
+    timeSortedArtifactData = timeSortedArtifactData(timeSortedArtifactData(:, 5) <= 0, :);
 end
+
 totalRecordingsToAnalyze = length(timeSortedArtifactData);
 timeSortedRecordingIds = timeSortedArtifactData(:, 1);
 averageRecordingDuration = mean(timeSortedArtifactData(:, 2));
@@ -346,7 +357,7 @@ if(savePlots)
                 channelsMetricList, ...
                 metricToPlot, ...
                 metricsClims, ...
-                filterType, ...
+                filterDescription, ...
                 totalNumberOfSubplots, ...
                 tickDecimateFactor, ...
                 selectedMetricDirectory, ...
@@ -444,7 +455,7 @@ if(averageMetrics == 1)
         grandAveragesS, ...
         patientId, ...
         filterDescription, ...
-        patientMetricPlotsDirectory, ...
+        averagedMetricsDirectory, ...
         doNotCloseFigure)
 
 end
@@ -455,7 +466,7 @@ if(saveVideo)
 
     cd(selectedMetricDirectory)
 
-    videoFolder = patientMetricPlotsDirectory;
+    videoFolder = videosDirectory;
     videoFileName = fullfile(videoFolder, [metricString, '_', filterDescription, '_patient', num2str(patientId)]);
     pngFiles = dir(['*', metricString, '*.png']);
 

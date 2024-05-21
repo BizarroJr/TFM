@@ -5,7 +5,7 @@ function DV_MetricAveragePlotter( ...
     grandAveragesS, ...
     patientId, ...
     filterDescription, ...
-    patientMetricPlotsDirectory, ...
+    directoryToSave, ...
     doNotCloseFigure)
 
 %% Gca parameters and set general title of subplots
@@ -43,7 +43,7 @@ grandAveragesS = flip(grandAveragesS);
 %% Plotting grand averages for each metric as colormaps
 
 cmap = 'hot';
-periodsToAnalyze = 1;
+periodsToAnalyze = 1:3; % If variable is 1,2 or 3 it will plot the average of the desired period. If it is 1:2 OR 1:3 it will plot multiple
 xticksLabels = {'Pre-Ictal Period', 'Ictal Period', 'Post-Ictal Period'};
 middleTick = periodsToAnalyze;
 
@@ -94,8 +94,12 @@ xticklabels(xticksLabels);
 
 %% Save figure
 
+% DISCLAIMER: if images are saved in different sizes, DO NOT USE 2 screens,
+% for whatever reason, the program fails to recognize the correct size and
+% some plots are saved in one size and other in an other.
+
 originDirectory = pwd;
-cd(patientMetricPlotsDirectory);
+cd(directoryToSave);
 
 fileTitle = ['AvgMetrics_', filterDescription, '_patient', num2str(patientId), '_periods', num2str(length(periodsToAnalyze))];
 imageExtension = '.png';
@@ -110,9 +114,12 @@ set(figHandle, 'PaperUnits', 'inches');
 set(figHandle, 'PaperSize', [desiredWidthInches, desiredHeightInches]);
 set(figHandle, 'PaperPosition', [0, 0, desiredWidthInches, desiredHeightInches]);
 
+% Fix the axes to ensure they are not resized automatically
+set(findall(figHandle, 'Type', 'axes'), 'Units', 'normalized', 'Position', [0.1 0.1 0.8 0.8]);
+
 % Save the figure as an image
 saveas(figHandle, fullImageFileName);
-print(fullImageFileName, '-dpng', '-r300'); % 300 DPI resolution
+print(figHandle, fullImageFileName, '-dpng', '-r300'); % 300 DPI resolution
 
 cd(originDirectory);
 

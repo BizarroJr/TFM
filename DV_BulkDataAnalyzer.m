@@ -3,7 +3,7 @@ clc;
 close all;
 
 %% User tunable variables
-analysisType = 'clean'; % Either clean or unclean. Unclean will include data with dropouts
+analysisType = 'clean'; % Either clean or unclean. Unclean will include data with artifacts (dropouts and flatlines)
 windowSizeSeconds = 10; % In seconds
 overlapSeconds = 9; % Overlap between windows
 totalNumberOfSubplots = 1; % Number of plots on each file
@@ -11,9 +11,9 @@ tickDecimateFactor = 4; % Number of ticks to be removed per plot
 orderType = 1; % 1-ascending, 2-descending
 lowContrast = false; % Use the same color scale for a recording, to compare between metrics. Only suitable for a single recording screening.
 obtainExtremeValues = false; % Gather which are all the min & max values of a metric, then perform an average
-saveMetrics = true; % Save metric mat files
-savePlots = false; % Save metric plots into png and mat files
-saveVideo = false; % Saves video
+savePlots = true; % Save metric plots into png and mat files
+saveMetrics = true; % If savePlots is true, save metric mat files as well
+saveVideo = true; % Saves video
 performMetricsAverage = true; % Averages metrics and saves results, if 1, performs average, else does not. This is done to optimize code and perform this just once.
 doNotCloseFigure = false; % In DV_MultiPBMPlotter, if visualize fig is 'on', closes it if false
 storeInHardDrive = true;
@@ -25,7 +25,7 @@ end
 
 processStartTime = tic;
 for patientId = 1:15
-    if any(patientId == [5, 6, 12, 14])
+      if any(patientId == [5, 6, 12, 14])
         continue
     end
     

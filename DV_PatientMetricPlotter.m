@@ -10,7 +10,7 @@ function DV_PatientMetricPlotter( ...
     channelsMetricList, ...
     metricToPlot, ...
     metricsClims, ...
-    filterType, ...
+    filterDescription, ...
     totalNumberOfSubplots, ...
     tickDecimateFactor, ...
     savePlotsDirectory, ...
@@ -27,17 +27,6 @@ axisFontWeight = 'bold';
 set(groot,'defaultAxesTickLabelInterpreter',interpreter);
 set(groot,'defaultTextInterpreter',interpreter); 
 set(groot,'defaultLegendInterpreter',interpreter);
-
-switch filterType
-    case 1
-        filterDescription = 'NF';
-    case 2
-        filterDescription = 'LPF';
-    case 3
-        filterDescription = 'HPF';
-    otherwise
-        filterDescription = '';
-end
 
 generalTitle = ['Patient ', num2str(patientId), ' (', num2str(batchNumber), ')'];
 if ~isempty(filterDescription)
@@ -162,7 +151,7 @@ for currentSubplot = 1:totalNumberOfSubplots
 
     currenPlotId = startPlotId + currentSubplot;
 
-    title([num2str(currenPlotId), '. Seizure ', num2str(seizure), ', duration ', num2str(round(seizureDuration, 2))], 'Interpreter', interpreter, 'FontWeight', axisFontWeight, 'FontSize', titlesFontSize);
+    title([num2str(currenPlotId - 1), '. Seizure ', num2str(seizure), ', duration ', num2str(round(seizureDuration, 2))], 'Interpreter', interpreter, 'FontWeight', axisFontWeight, 'FontSize', titlesFontSize);
     colormap('hot');
     clim(gca, [minValue, maxValue]);
 
@@ -205,7 +194,9 @@ cd(savePlotsDirectory);
 
 % figHandle = gcf;
 batchNumberStr = sprintf('%03d', batchNumber);
-fileTitle = [metricString, '_', filterDescription, '_patient', num2str(patientId), '_batch', batchNumberStr];
+
+fileTitle = [metricString, '_', filterDescription, '_patient', num2str(patientId), '_batch', batchNumberStr, '_rec', num2str(seizureList)];
+
 figExtension = '.mat';
 imageExtension = '.png';
 
@@ -223,7 +214,7 @@ set(figHandle, 'PaperPosition', [0, 0, desiredWidthInches, desiredHeightInches])
 
 % Save the figure as an image
 saveas(figHandle, fullImageFileName);
-print(fullImageFileName, '-dpng', '-r300'); % 300 DPI resolution
+print(fullImageFileName, '-dpng', '-r150'); % 300 DPI resolution
 
 % Save the figure as a mat
 figHandle = gcf;
