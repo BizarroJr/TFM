@@ -214,7 +214,7 @@ set(figHandle, 'PaperPosition', [0, 0, desiredWidthInches, desiredHeightInches])
 
 % Save the figure as an image
 saveas(figHandle, fullImageFileName);
-print(fullImageFileName, '-dpng', '-r150'); % 300 DPI resolution
+print(fullImageFileName, '-dpng', '-r150'); % Set DPI resolution
 
 % Save the figure as a mat
 figHandle = gcf;

@@ -35,9 +35,11 @@ switch filterType
     case 2
         filterDescription = 'LPF';
     case 3
-        filterDescription = 'HPF2';
+        filterDescription = 'HPF';
+    case 4
+        filterDescription = 'MPF';
     otherwise
-        error('Invalid filterType: %d. filterType must be 1, 2, or 3.', filterType);
+        error('Invalid filterType: %d. filterType does not exist.', filterType);
 end
 
 switch(analysisType)
@@ -130,8 +132,8 @@ switch(orderType)
 end
 
 if strcmp(analysisType, 'clean')
-    timeSortedArtifactData = timeSortedArtifactData(timeSortedArtifactData(:, 3) <= 0, :);
-    timeSortedArtifactData = timeSortedArtifactData(timeSortedArtifactData(:, 5) <= 0, :);
+    timeSortedArtifactData = timeSortedArtifactData(timeSortedArtifactData(:, 3) == 0, :); % Remove dropouts
+    timeSortedArtifactData = timeSortedArtifactData(timeSortedArtifactData(:, 6) == 0, :); % Remove flatlines
 end
 
 totalRecordingsToAnalyze = length(timeSortedArtifactData);
@@ -151,7 +153,7 @@ if(obtainExtremeValues)
     [metricLimits, metricsExtremeValuesList] = DV_ClimExtractor( ...
         patientId, ...
         dataDirectory, ...
-        visualizerDirectory, ...
+        additionalScriptsDirectory, ...
         metricsAndMeasuresDirectory, ...
         additionalScriptsDirectory, ...
         windowSizeSeconds, ...
@@ -162,9 +164,8 @@ if(obtainExtremeValues)
 end
 
 %% Clim definition
-
 totalPatients = 15;
-totalFilterTypes = 3;
+totalFilterTypes = 4;
 
 patientsClims = cell(totalPatients, totalFilterTypes); % patientsClims{patientId, filterType}
 
@@ -175,68 +176,148 @@ for patient = 1:totalPatients
     end
 end
 
-% Patient 1
-patientsClims{1, 1} = {[0.8 3.86] [0.05 0.66] [0.13 0.71]};
-patientsClims{1, 2} = {[0.49 1.35] [0.12 0.32] [0.1 0.25]};
-patientsClims{1, 3} = {[0.23 0.38] [1.46 1.67] [0.36 0.59]};
+%% TO DELETE
+% % Patient 1
+% patientsClims{1, 1} = {[0.8 3.86] [0.05 0.66] [0.13 0.71]};
+% patientsClims{1, 2} = {[0.49 1.35] [0.12 0.32] [0.1 0.25]};
+% patientsClims{1, 3} = {[0.23 0.38] [1.46 1.67] [0.36 0.59]};
+% 
+% % Patient 2
+% patientsClims{2, 1} = {[1.09 4.27] [0.04 0.35] [0.09 0.55]};
+% patientsClims{2, 2} = {[0.61 1.38] [0.11 0.27] [0.1 0.24]};
+% patientsClims{2, 3} = {[0.26 0.37] [1.52 1.68] [0.42 0.58]};
+% 
+% % Patient 3
+% patientsClims{3, 1} = {[0.83 4.77] [0.06 0.95] [0.13 0.91]};
+% patientsClims{3, 2} = {[0.56 1.4] [0.1 0.29] [0.09 0.25]};
+% patientsClims{3, 3} = {[0.24 0.38] [1.42 1.74] [0.37 0.61]};
+% 
+% % Patient 4
+% patientsClims{4, 1} = {[0.89 3.89] [0.03 0.47] [0.07 0.83]};
+% patientsClims{4, 2} = {[0.63 1.4] [0.1 0.26] [0.08 0.24]};
+% patientsClims{4, 3} = {[0.26 0.36] [1.54 1.7] [0.43 0.59]};
+% 
+% % Patient 5 (NO DATA)
+% 
+% % Patient 6 (NO DATA)
+% 
+% % Patient 7
+% patientsClims{7, 1} = {[0.83 3.67] [0.04 0.61] [0.09 0.63]};
+% patientsClims{7, 2} = {[0.55 1.35] [0.1 0.32] [0.07 0.24]};
+% patientsClims{7, 3} = {[0.26 0.38] [1.49 1.68] [0.43 0.6]};
+% 
+% % Patient 8
+% patientsClims{8, 1} = {[0.79 3.5] [0.06 0.4] [0.13 0.51]};
+% patientsClims{8, 2} = {[0.46 1.4] [0.11 0.37] [0.09 0.26]};
+% patientsClims{8, 3} = {[0.26 0.38] [1.5 1.66] [0.43 0.59]};
+% 
+% % Patient 9
+% patientsClims{9, 1} = {[0.94 3.12] [0.05 0.56] [0.11 0.72]};
+% patientsClims{9, 2} = {[0.55 1.39] [0.11 0.29] [0.09 0.25]};
+% patientsClims{9, 3} = {[0.21 0.37] [1.48 1.66] [0.32 0.59]};
+% 
+% % Patient 10
+% patientsClims{10, 1} = {[0.93 3.41] [0.05 0.36] [0.09 0.51]};
+% patientsClims{10, 2} = {[0.58 1.39] [0.1 0.3] [0.08 0.25]};
+% patientsClims{10, 3} = {[0.27 0.38] [1.5 1.67] [0.43 0.6]};
+% 
+% % Patient 11
+% patientsClims{11, 1} = {[0.86 4.44] [0.04 0.35] [0.12 0.56]};
+% patientsClims{11, 2} = {[0.55 1.34] [0.12 0.3] [0.09 0.24]};
+% patientsClims{11, 3} = {[0.26 0.37] [1.44 1.66] [0.41 0.58]};
+% 
+% % Patient 12 (NO DATA)
+% 
+% % Patient 13
+% patientsClims{13, 1} = {[0.94 4.2] [0.04 0.71] [0.08 0.84]};
+% patientsClims{13, 2} = {[0.44 1.42] [0.1 0.31] [0.09 0.25]};
+% patientsClims{13, 3} = {[0.21 0.39] [1.44 1.68] [0.32 0.59]};
+% 
+% % Patient 14 (NO DATA)
+% 
+% % Patient 15
+% patientsClims{15, 1} = {[0.8 4.88] [0.03 0.39] [0.08 0.66]};
+% patientsClims{15, 2} = {[0.62 1.47] [0.1 0.26] [0.07 0.26]};
+% patientsClims{15, 3} = {[0.26 0.38] [1.5 1.69] [0.43 0.6]};
 
-% Patient 2
-patientsClims{2, 1} = {[1.09 4.27] [0.04 0.35] [0.09 0.55]};
-patientsClims{2, 2} = {[0.61 1.38] [0.11 0.27] [0.1 0.24]};
-patientsClims{2, 3} = {[0.26 0.37] [1.52 1.68] [0.42 0.58]};
+%%
 
-% Patient 3
-patientsClims{3, 1} = {[0.83 4.77] [0.06 0.95] [0.13 0.91]};
-patientsClims{3, 2} = {[0.56 1.4] [0.1 0.29] [0.09 0.25]};
-patientsClims{3, 3} = {[0.24 0.38] [1.42 1.74] [0.37 0.61]};
+switch(filterDescription)
+    case 'NF'
 
-% Patient 4
-patientsClims{4, 1} = {[0.89 3.89] [0.03 0.47] [0.07 0.83]};
-patientsClims{4, 2} = {[0.63 1.4] [0.1 0.26] [0.08 0.24]};
-patientsClims{4, 3} = {[0.26 0.36] [1.54 1.7] [0.43 0.59]};
+        % No Filter data
+        patientsClims{1, 1} = {[0.8 3.86] [0.05 0.66] [0.13 0.71]};
+        patientsClims{2, 1} = {[1.09 4.27] [0.04 0.35] [0.09 0.55]};
+        patientsClims{3, 1} = {[0.83 4.77] [0.06 0.95] [0.13 0.91]};
+        patientsClims{4, 1} = {[0.89 3.89] [0.03 0.47] [0.07 0.83]};
+        patientsClims{7, 1} = {[0.83 3.67] [0.04 0.61] [0.09 0.63]};
+        patientsClims{8, 1} = {[0.79 3.5] [0.06 0.4] [0.13 0.51]};
+        patientsClims{9, 1} = {[0.94 3.12] [0.05 0.56] [0.11 0.72]};
+        patientsClims{10, 1} = {[0.93 3.41] [0.05 0.36] [0.09 0.51]};
+        patientsClims{11, 1} = {[0.86 4.44] [0.04 0.35] [0.12 0.56]};
+        patientsClims{13, 1} = {[0.94 4.2] [0.04 0.71] [0.08 0.84]};
+        patientsClims{15, 1} = {[0.8 4.88] [0.03 0.39] [0.08 0.66]};
 
-% Patient 5 (NO DATA)
+    case 'LPF'
 
-% Patient 6 (NO DATA)
+        % Low-Pass Filter data
+        patientsClims{1, 2} = {[0.49 1.35] [0.12 0.32] [0.1 0.25]};
+        patientsClims{2, 2} = {[0.61 1.38] [0.11 0.27] [0.1 0.24]};
+        patientsClims{3, 2} = {[0.56 1.4] [0.1 0.29] [0.09 0.25]};
+        patientsClims{4, 2} = {[0.63 1.4] [0.1 0.26] [0.08 0.24]};
+        patientsClims{7, 2} = {[0.55 1.35] [0.1 0.32] [0.07 0.24]};
+        patientsClims{8, 2} = {[0.46 1.4] [0.11 0.37] [0.09 0.26]};
+        patientsClims{9, 2} = {[0.55 1.39] [0.11 0.29] [0.09 0.25]};
+        patientsClims{10, 2} = {[0.58 1.39] [0.1 0.3] [0.08 0.25]};
+        patientsClims{11, 2} = {[0.55 1.34] [0.12 0.3] [0.09 0.24]};
+        patientsClims{13, 2} = {[0.44 1.42] [0.1 0.31] [0.09 0.25]};
+        patientsClims{15, 2} = {[0.62 1.47] [0.1 0.26] [0.07 0.26]};
+        
+    case 'HPF'
 
-% Patient 7
-patientsClims{7, 1} = {[0.83 3.67] [0.04 0.61] [0.09 0.63]};
-patientsClims{7, 2} = {[0.55 1.35] [0.1 0.32] [0.07 0.24]};
-patientsClims{7, 3} = {[0.26 0.38] [1.49 1.68] [0.43 0.6]};
+        % High-Pass Filter data
+        patientsClims{1, 3} = {[0.23 0.38] [1.46 1.67] [0.36 0.59]};
+        patientsClims{2, 3} = {[0.26 0.37] [1.52 1.68] [0.42 0.58]};
+        patientsClims{3, 3} = {[0.24 0.38] [1.42 1.74] [0.37 0.61]};
+        patientsClims{4, 3} = {[0.26 0.36] [1.54 1.7] [0.43 0.59]};
+        patientsClims{7, 3} = {[0.26 0.38] [1.49 1.68] [0.43 0.6]};
+        patientsClims{8, 3} = {[0.26 0.38] [1.5 1.66] [0.43 0.59]};
+        patientsClims{9, 3} = {[0.21 0.37] [1.48 1.66] [0.32 0.59]};
+        patientsClims{10, 3} = {[0.27 0.38] [1.5 1.67] [0.43 0.6]};
+        patientsClims{11, 3} = {[0.26 0.37] [1.44 1.66] [0.41 0.58]};
+        patientsClims{13, 3} = {[0.21 0.39] [1.44 1.68] [0.32 0.59]};
+        patientsClims{15, 3} = {[0.26 0.38] [1.5 1.69] [0.43 0.6]};
 
-% Patient 8
-patientsClims{8, 1} = {[0.79 3.5] [0.06 0.4] [0.13 0.51]};
-patientsClims{8, 2} = {[0.46 1.4] [0.11 0.37] [0.09 0.26]};
-patientsClims{8, 3} = {[0.26 0.38] [1.5 1.66] [0.43 0.59]};
+    case 'MPF'
+        
+        % Mid-Pass Filter Data
+        patientsClims{1, 4} = {[0.18 0.39] [0.76 0.99] [0.15 0.33]};
+        patientsClims{2, 4} = {[0.24 0.38] [0.81 0.92] [0.21 0.32]};
+        patientsClims{3, 4} = {[0.19 0.42] [0.89 1.13] [0.2 0.38]};
+        patientsClims{4, 4} = {[0.25 0.39] [0.8 0.93] [0.2 0.33]};
+        patientsClims{7, 4} = {[0.18 0.37] [0.79 0.99] [0.17 0.32]};
+        patientsClims{8, 4} = {[0.24 0.37] [0.83 0.93] [0.21 0.32]};
+        patientsClims{9, 4} = {[0.25 0.38] [0.8 0.9] [0.21 0.32]};
+        patientsClims{10, 4} = {[0.22 0.37] [0.79 0.93] [0.19 0.32]};
+        patientsClims{11, 4} = {[0.24 0.37] [0.82 0.94] [0.21 0.32]};
+        patientsClims{13, 4} = {[0.19 0.38] [0.79 0.98] [0.18 0.32]};
+        patientsClims{15, 4} = {[0.23 0.41] [0.77 0.94] [0.21 0.33]};
 
-% Patient 9
-patientsClims{9, 1} = {[0.94 3.12] [0.05 0.56] [0.11 0.72]};
-patientsClims{9, 2} = {[0.55 1.39] [0.11 0.29] [0.09 0.25]};
-patientsClims{9, 3} = {[0.21 0.37] [1.48 1.66] [0.32 0.59]};
+    case 'HPF2' 
 
-% Patient 10
-patientsClims{10, 1} = {[0.93 3.41] [0.05 0.36] [0.09 0.51]};
-patientsClims{10, 2} = {[0.58 1.39] [0.1 0.3] [0.08 0.25]};
-patientsClims{10, 3} = {[0.27 0.38] [1.5 1.67] [0.43 0.6]};
-
-% Patient 11
-patientsClims{11, 1} = {[0.86 4.44] [0.04 0.35] [0.12 0.56]};
-patientsClims{11, 2} = {[0.55 1.34] [0.12 0.3] [0.09 0.24]};
-patientsClims{11, 3} = {[0.26 0.37] [1.44 1.66] [0.41 0.58]};
-
-% Patient 12 (NO DATA)
-
-% Patient 13
-patientsClims{13, 1} = {[0.94 4.2] [0.04 0.71] [0.08 0.84]};
-patientsClims{13, 2} = {[0.44 1.42] [0.1 0.31] [0.09 0.25]};
-patientsClims{13, 3} = {[0.21 0.39] [1.44 1.68] [0.32 0.59]};
-
-% Patient 14 (NO DATA)
-
-% Patient 15
-patientsClims{15, 1} = {[0.8 4.88] [0.03 0.39] [0.08 0.66]};
-patientsClims{15, 2} = {[0.62 1.47] [0.1 0.26] [0.07 0.26]};
-patientsClims{15, 3} = {[0.26 0.38] [1.5 1.69] [0.43 0.6]};
+        % Alternative HPF [90, 130] Hz
+        patientsClims{1, 3} = {[0.2 0.34] [1.46 1.64] [0.31 0.51]}; 
+        patientsClims{2, 3} = {[0.23 0.33] [1.52 1.65] [0.36 0.52]};
+        patientsClims{3, 3} = {[0.21 0.33] [1.42 1.69] [0.32 0.52]};
+        patientsClims{4, 3} = {[0.22 0.33] [1.54 1.66] [0.36 0.52]};
+        patientsClims{7, 3} = {[0.23 0.34] [1.5 1.65] [0.37 0.52]}; 
+        patientsClims{8, 3} = {[0.23 0.34] [1.5 1.63] [0.36 0.52]};
+        patientsClims{9, 3} = {[0.19 0.33] [1.47 1.64] [0.29 0.51]};
+        patientsClims{10, 3} = {[0.23 0.34] [1.5 1.64] [0.37 0.53]};
+        patientsClims{11, 3} = {[0.23 0.33] [1.44 1.63] [0.35 0.52]};
+        patientsClims{13, 3} = {[0.19 0.34] [1.44 1.65] [0.29 0.52]};
+        patientsClims{15, 3} = {[0.23 0.34] [1.5 1.66] [0.36 0.52]};
+end
 
 if(lowContrast)
     metricsClims = patientsClims{patientId, 1};
@@ -285,7 +366,7 @@ if(savePlots)
 
         % Filter the channels
         for i = 1:totalChannels
-            cd(visualizerDirectory)
+            cd(additionalScriptsDirectory)
             channelData = eegFullCentered(i, :);
             filteredChannel = DV_BandPassFilter(channelData, fs, filterType);
             filteredEegFullCentered(i, :) = filteredChannel;
@@ -383,6 +464,7 @@ if(averageMetrics == 1)
     preIctalPeriodAverages = {[], [], []};
     ictalPeriodAverages = {[], [], []};
     postIctalPeriodAverages = {[], [], []};
+    preIctalWindowsAverages = {[], [], []};
 
     for index = 1:length(timeSortedRecordingIds)
         %% Definition of basic EEG and processing variables
@@ -416,7 +498,7 @@ if(averageMetrics == 1)
 
         cd(additionalScriptsDirectory);
 
-        [preIctalPeriodAverages, ictalPeriodAverages, postIctalPeriodAverages] = DV_MetricAverager( ...
+        [preIctalPeriodAverages, ictalPeriodAverages, postIctalPeriodAverages,preIctalWindowsAverages] = DV_MetricAverager( ...
             eegFull, ...
             fs, ...
             totalWindows, ...
@@ -425,7 +507,8 @@ if(averageMetrics == 1)
             overlapSeconds, ...
             preIctalPeriodAverages, ...
             ictalPeriodAverages, ...
-            postIctalPeriodAverages);
+            postIctalPeriodAverages, ...
+            preIctalWindowsAverages);
         
     end
 
@@ -448,11 +531,27 @@ if(averageMetrics == 1)
     grandAveragesS(:, 2) = mean(ictalPeriodAverages{3}, 2);
     grandAveragesS(:, 3) = mean(postIctalPeriodAverages{3}, 2);
 
+    % Calculate grand averages for each window
+    validRecordings = length(timeSortedRecordingIds);
+    grandAverageWindowsV = preIctalWindowsAverages{1} / validRecordings;
+    grandAverageWindowsM = preIctalWindowsAverages{2} / validRecordings;
+    grandAverageWindowsS = preIctalWindowsAverages{3} / validRecordings;
+
     DV_MetricAveragePlotter( ...
         eegFull, ...
         grandAveragesV, ...
         grandAveragesM, ...
         grandAveragesS, ...
+        patientId, ...
+        filterDescription, ...
+        averagedMetricsDirectory, ...
+        doNotCloseFigure)
+
+    DV_MetricWindowAveragePlotter( ...
+        eegFull, ...
+        grandAverageWindowsV, ...
+        grandAverageWindowsM, ...
+        grandAverageWindowsS, ...
         patientId, ...
         filterDescription, ...
         averagedMetricsDirectory, ...

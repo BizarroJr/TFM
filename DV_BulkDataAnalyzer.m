@@ -14,13 +14,14 @@ obtainExtremeValues = false; % Gather which are all the min & max values of a me
 savePlots = true; % Save metric plots into png and mat files
 saveMetrics = true; % If savePlots is true, save metric mat files as well
 saveVideo = true; % Saves video
-performMetricsAverage = true; % Averages metrics and saves results, if 1, performs average, else does not. This is done to optimize code and perform this just once.
+performMetricsAverage = false; % Averages metrics and saves results, if 1, performs average, else does not. This is done to optimize code and perform this just once.
 doNotCloseFigure = false; % In DV_MultiPBMPlotter, if visualize fig is 'on', closes it if false
 storeInHardDrive = true;
 
 if(obtainExtremeValues)
     savePlots = false;
     saveVideo = false;
+    performMetricsAverage = false;
 end
 
 processStartTime = tic;
@@ -34,7 +35,7 @@ for patientId = 1:15
     % Start the timer for the patient loop
     patientStartTime = tic;
 
-    for filterType = 1:3
+    for filterType = 4
 
         if(performMetricsAverage)
             averageMetrics = true;

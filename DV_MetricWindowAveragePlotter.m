@@ -1,16 +1,16 @@
-function DV_MetricAveragePlotter( ...
+function DV_MetricWindowAveragePlotter( ...
     eegFull, ...
-    grandAveragesV, ...
-    grandAveragesM, ...
-    grandAveragesS, ...
+    grandAverageWindowsV, ...
+    grandAverageWindowsM, ...
+    grandAverageWindowsS, ...
     patientId, ...
     filterDescription, ...
-    directoryToSave, ...
+    averagedMetricsDirectory, ...
     doNotCloseFigure)
 
 %% Gca parameters and set general title of subplots
 
-figHandle = figure('Visible', 'off'); % Change on & off to let the figure be seen 
+figHandle = figure('Visible', 'on'); % Change on & off to let the figure be seen 
 
 interpreter = 'latex';
 titlesFontSize = 16;
@@ -36,20 +36,18 @@ end
 
 % Reverse the order to coincide with the display of the EEG
 nameChannel = flip(nameChannel);
-grandAveragesV = flip(grandAveragesV);
-grandAveragesM = flip(grandAveragesM);
-grandAveragesS = flip(grandAveragesS);
+grandAveragesV = flip(grandAverageWindowsV);
+grandAveragesM = flip(grandAverageWindowsM);
+grandAveragesS = flip(grandAverageWindowsS);
 
 %% Plotting grand averages for each metric as colormaps
 
 cmap = 'hot';
 periodsToAnalyze = 1; % If variable is 1,2 or 3 it will plot the average of the desired period. If it is 1:2 OR 1:3 it will plot multiple
-xticksLabels = {'Pre-Ictal Period', 'Ictal Period', 'Post-Ictal Period'};
-middleTick = periodsToAnalyze;
 
 % Plot for metric V
 subplot(3, 1, 1);
-imagesc(grandAveragesV(:, periodsToAnalyze));
+imagesc(grandAveragesV);
 colormap(cmap);
 colorbar;
 cbar = colorbar;
@@ -59,12 +57,10 @@ cbar.Label.Interpreter = interpreter;
 set(cbar, 'TickLabelInterpreter', interpreter);
 yticks(1:totalChannels);
 yticklabels(nameChannel);
-xticks(middleTick);
-xticklabels(xticksLabels);
 
 % Plot for metric M
 subplot(3, 1, 2);
-imagesc(grandAveragesM(:, periodsToAnalyze));
+imagesc(grandAveragesM);
 colormap(cmap);
 colorbar;
 cbar = colorbar;
@@ -74,12 +70,10 @@ cbar.Label.Interpreter = interpreter;
 set(cbar, 'TickLabelInterpreter', interpreter);
 yticks(1:totalChannels);
 yticklabels(nameChannel);
-xticks(middleTick);
-xticklabels(xticksLabels);
 
 % Plot for metric S
 subplot(3, 1, 3);
-imagesc(grandAveragesS(:, periodsToAnalyze));
+imagesc(grandAveragesS);
 colormap(cmap);
 colorbar;
 cbar = colorbar;
@@ -89,8 +83,6 @@ cbar.Label.Interpreter = interpreter;
 set(cbar, 'TickLabelInterpreter', interpreter);
 yticks(1:totalChannels);
 yticklabels(nameChannel);
-xticks(middleTick);
-xticklabels(xticksLabels);
 
 %% Save figure
 
